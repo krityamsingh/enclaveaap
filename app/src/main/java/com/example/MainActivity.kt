@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 }
 
 enum class Screen {
-    Chats, Spaces, Channels, Profile, ChatDetail, Subscription
+    PinLock, Chats, Spaces, Channels, Profile, ChatDetail, Subscription
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,7 +61,7 @@ enum class Screen {
 fun EnclaveApp(viewModel: ChatViewModel = viewModel()) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Chats.name
+    val currentRoute = navBackStackEntry?.destination?.route ?: Screen.PinLock.name
     val isTopLevel = currentRoute in listOf(Screen.Chats.name, Screen.Spaces.name, Screen.Channels.name, Screen.Profile.name)
     var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -111,28 +111,52 @@ fun EnclaveApp(viewModel: ChatViewModel = viewModel()) {
                     NavigationBar(containerColor = Color(0xFFF3F4F9), tonalElevation = 0.dp) {
                         NavigationBarItem(
                             selected = currentRoute == Screen.Chats.name,
-                            onClick = { navController.navigate(Screen.Chats.name) { popUpTo(Screen.Chats.name) { inclusive = true } } },
+                            onClick = { 
+                                navController.navigate(Screen.Chats.name) { 
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                } 
+                            },
                             icon = { Icon(Icons.Filled.ChatBubble, contentDescription = "Chats") },
                             label = { Text("Chats", fontWeight = FontWeight.SemiBold) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = OnPrimaryContainer, selectedTextColor = OnSurface, indicatorColor = PrimaryContainer, unselectedIconColor = OnSurfaceVariant, unselectedTextColor = OnSurfaceVariant)
                         )
                         NavigationBarItem(
                             selected = currentRoute == Screen.Spaces.name,
-                            onClick = { navController.navigate(Screen.Spaces.name) },
+                            onClick = { 
+                                navController.navigate(Screen.Spaces.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
                             icon = { Icon(Icons.Outlined.Folder, contentDescription = "Spaces") },
                             label = { Text("Spaces") },
                             colors = NavigationBarItemDefaults.colors(unselectedIconColor = OnSurfaceVariant, unselectedTextColor = OnSurfaceVariant)
                         )
                         NavigationBarItem(
                             selected = currentRoute == Screen.Channels.name,
-                            onClick = { navController.navigate(Screen.Channels.name) },
+                            onClick = { 
+                                navController.navigate(Screen.Channels.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
                             icon = { Icon(Icons.Outlined.Campaign, contentDescription = "Channels") },
                             label = { Text("Channels") },
                             colors = NavigationBarItemDefaults.colors(unselectedIconColor = OnSurfaceVariant, unselectedTextColor = OnSurfaceVariant)
                         )
                         NavigationBarItem(
                             selected = currentRoute == Screen.Profile.name,
-                            onClick = { navController.navigate(Screen.Profile.name) },
+                            onClick = { 
+                                navController.navigate(Screen.Profile.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
                             icon = { Icon(Icons.Outlined.Person, contentDescription = "Profile") },
                             label = { Text("Profile") },
                             colors = NavigationBarItemDefaults.colors(unselectedIconColor = OnSurfaceVariant, unselectedTextColor = OnSurfaceVariant)
@@ -142,7 +166,12 @@ fun EnclaveApp(viewModel: ChatViewModel = viewModel()) {
             }
         }
     ) { innerPadding ->
-        NavHost(navController = navController, startDestination = Screen.Chats.name, modifier = Modifier.padding(innerPadding)) {
+        NavHost(navController = navController, startDestination = Screen.PinLock.name, modifier = Modifier.padding(innerPadding)) {
+            composable(Screen.PinLock.name) {
+                com.example.ui.PinLockScreen(onUnlocked = {
+                    navController.navigate(Screen.Chats.name) { popUpTo(Screen.PinLock.name) { inclusive = true } }
+                })
+            }
             composable(Screen.Chats.name) {
                 com.example.ui.ChatsListScreen(viewModel, showBottomSheet, { showBottomSheet = false }, { navController.navigate(Screen.ChatDetail.name) })
             }

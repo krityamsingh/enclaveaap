@@ -28,6 +28,104 @@ import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.animation.core.animateFloatAsState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.automirrored.filled.Backspace
+
+@Composable
+fun PinLockScreen(onUnlocked: () -> Unit) {
+    var pin by remember { mutableStateOf("") }
+    var isError by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    
+    val shake by animateFloatAsState(targetValue = if (isError) 10f else 0f, label = "shake")
+
+    Column(modifier = Modifier.fillMaxSize().background(PrimaryContainer), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Icon(Icons.Filled.Lock, contentDescription = null, tint = OnPrimaryContainer, modifier = Modifier.size(64.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Enter Passcode", fontSize = 20.sp, color = OnPrimaryContainer, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // PIN Dots
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.offset(x = shake.dp)) {
+            for (i in 0 until 4) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clip(CircleShape)
+                        .background(if (i < pin.length) OnPrimaryContainer else OnPrimaryContainer.copy(alpha = 0.3f))
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(64.dp))
+        
+        // Keypad
+        val keys = listOf(
+            listOf("1", "2", "3"),
+            listOf("4", "5", "6"),
+            listOf("7", "8", "9"),
+            listOf("", "0", "\u232B")
+        )
+        
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            for (row in keys) {
+                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    for (key in row) {
+                        if (key.isEmpty()) {
+                            Spacer(modifier = Modifier.size(72.dp))
+                        } else if (key == "\u232B") {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .clickable(enabled = pin.isNotEmpty()) {
+                                        pin = pin.dropLast(1)
+                                        isError = false
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "Delete", tint = OnPrimaryContainer)
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(CircleShape)
+                                    .background(OnPrimaryContainer.copy(alpha = 0.1f))
+                                    .clickable {
+                                        if (pin.length < 4) {
+                                            pin += key
+                                            if (pin.length == 4) {
+                                                if (pin == "1234") {
+                                                    scope.launch {
+                                                        delay(300)
+                                                        onUnlocked()
+                                                    }
+                                                } else {
+                                                    isError = true
+                                                    scope.launch {
+                                                        delay(400)
+                                                        pin = ""
+                                                        isError = false
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(key, fontSize = 28.sp, color = OnPrimaryContainer, fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+            Text("Hint: PIN is 1234", fontSize = 14.sp, color = OnPrimaryContainer.copy(alpha = 0.7f), modifier = Modifier.align(Alignment.CenterHorizontally))
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -212,6 +310,38 @@ fun ChatDetailScreen(onBack: () -> Unit) {
 
 @Composable
 fun ProfileScreen(onNavigateToSubscription: () -> Unit = {}) {
+    var showSecurityDialog by remember { mutableStateOf(false) }
+
+    if (showSecurityDialog) {
+        AlertDialog(
+            onDismissRequest = { showSecurityDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Security, contentDescription = null, tint = GreenOnline)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Security verification")
+                }
+            },
+            text = {
+                Column {
+                    Text("Your TweetNaCl Public Key Fingerprint:", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(modifier = Modifier.background(SurfaceVariant, RoundedCornerShape(8.dp)).padding(16.dp)) {
+                        Text("3F9A 28BC 491D E5A1\n76F2 00B3 8C19 44FA", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, letterSpacing = 2.sp, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Only share this via a secure channel to verify your identity.", fontSize = 12.sp, color = TextSecondary)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSecurityDialog = false }) {
+                    Text("Dismiss", color = Primary)
+                }
+            },
+            containerColor = Surface
+        )
+    }
+
     Column(modifier = Modifier.fillMaxSize().background(Surface), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(32.dp))
         Box(modifier = Modifier.size(100.dp).clip(CircleShape).background(PrimaryContainer), contentAlignment = Alignment.Center) {
@@ -224,7 +354,7 @@ fun ProfileScreen(onNavigateToSubscription: () -> Unit = {}) {
         Spacer(modifier = Modifier.height(32.dp))
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), colors = CardDefaults.cardColors(containerColor = SurfaceVariant)) {
             Column {
-                ProfileOption(Icons.Outlined.Security, "Privacy & Security")
+                ProfileOption(Icons.Outlined.Security, "Privacy & Security", onClick = { showSecurityDialog = true })
                 HorizontalDivider(color = Outline)
                 ProfileOption(Icons.Outlined.Settings, "App Settings")
                 HorizontalDivider(color = Outline)
