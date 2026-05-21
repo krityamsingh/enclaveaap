@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-  namespace = "com.example"
+  namespace = "com.enclaveapp"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.example"
+    applicationId = "com.enclaveapp"
     minSdk = 24
     targetSdk = 36
     versionCode = 1
@@ -70,6 +70,8 @@ secrets {
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
+  implementation("com.google.firebase:firebase-firestore")
+  implementation("androidx.work:work-runtime-ktx:2.8.1")
   // implementation(libs.accompanist.permissions)
   implementation(libs.androidx.activity.compose)
   // implementation(libs.androidx.camera.camera2)
@@ -83,6 +85,13 @@ dependencies {
   implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.security.crypto)
+  implementation(libs.androidx.biometric)
+  implementation(libs.razorpay.checkout)
+  implementation("com.github.InstantWebP2P:tweetnacl-java:1.1.2")
+  implementation("com.google.zxing:core:3.5.3")
+  implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+  // implementation(libs.firebase.ai)
   // implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -33,18 +33,52 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.automirrored.filled.Backspace
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
+import androidx.biometric.BiometricPrompt
+import androidx.core.content.ContextCompat
+
 @Composable
 fun PinLockScreen(onUnlocked: () -> Unit) {
     var pin by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val authManager = remember { AuthManager(context) }
+    val isPinSet = remember { authManager.isPinSet() }
+    var confirmPin by remember { mutableStateOf<String?>(null) }
     
     val shake by animateFloatAsState(targetValue = if (isError) 10f else 0f, label = "shake")
+
+    // Biometric Check
+    LaunchedEffect(Unit) {
+        if (isPinSet && context is FragmentActivity) {
+            val executor = ContextCompat.getMainExecutor(context)
+            val biometricPrompt = BiometricPrompt(context, executor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        super.onAuthenticationSucceeded(result)
+                        onUnlocked()
+                    }
+                })
+            val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Unlock Enclave")
+                .setSubtitle("Use your biometric credential")
+                .setNegativeButtonText("Use PIN")
+                .build()
+            biometricPrompt.authenticate(promptInfo)
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().background(PrimaryContainer), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         Icon(Icons.Filled.Lock, contentDescription = null, tint = OnPrimaryContainer, modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(24.dp))
-        Text("Enter Passcode", fontSize = 20.sp, color = OnPrimaryContainer, fontWeight = FontWeight.Bold)
+        Text(
+            text = if (!isPinSet) {
+                if (confirmPin == null) "Set New Passcode" else "Confirm Passcode"
+            } else "Enter Passcode", 
+            fontSize = 20.sp, color = OnPrimaryContainer, fontWeight = FontWeight.Bold
+        )
         Spacer(modifier = Modifier.height(32.dp))
         
         // PIN Dots
@@ -97,17 +131,37 @@ fun PinLockScreen(onUnlocked: () -> Unit) {
                                         if (pin.length < 4) {
                                             pin += key
                                             if (pin.length == 4) {
-                                                if (pin == "1234") {
-                                                    scope.launch {
-                                                        delay(300)
-                                                        onUnlocked()
+                                                if (!isPinSet) {
+                                                    if (confirmPin == null) {
+                                                        confirmPin = pin
+                                                        pin = ""
+                                                    } else {
+                                                        if (confirmPin == pin) {
+                                                            authManager.setPin(pin)
+                                                            onUnlocked()
+                                                        } else {
+                                                            isError = true
+                                                            scope.launch {
+                                                                delay(400)
+                                                                pin = ""
+                                                                confirmPin = null
+                                                                isError = false
+                                                            }
+                                                        }
                                                     }
                                                 } else {
-                                                    isError = true
-                                                    scope.launch {
-                                                        delay(400)
-                                                        pin = ""
-                                                        isError = false
+                                                    if (authManager.verifyPin(pin)) {
+                                                        scope.launch {
+                                                            delay(300)
+                                                            onUnlocked()
+                                                        }
+                                                    } else {
+                                                        isError = true
+                                                        scope.launch {
+                                                            delay(400)
+                                                            pin = ""
+                                                            isError = false
+                                                        }
                                                     }
                                                 }
                                             }
@@ -122,7 +176,6 @@ fun PinLockScreen(onUnlocked: () -> Unit) {
                 }
             }
             Spacer(modifier = Modifier.height(32.dp))
-            Text("Hint: PIN is 1234", fontSize = 14.sp, color = OnPrimaryContainer.copy(alpha = 0.7f), modifier = Modifier.align(Alignment.CenterHorizontally))
         }
     }
 }
