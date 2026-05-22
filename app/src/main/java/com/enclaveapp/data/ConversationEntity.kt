@@ -9,5 +9,7 @@ data class ConversationEntity(
     val name: String,
     val lastMessage: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val disappearAfterMs: Long? = null
+    val disappearAfterMs: Long? = null,
+    val isArchived: Boolean = false,
+    val isMuted: Boolean = false
 )

@@ -24,14 +24,23 @@ interface MessageDao {
     @Query("DELETE FROM messages WHERE expiresAt IS NOT NULL AND expiresAt < :now")
     suspend fun deleteExpiredMessages(now: Long)
 
+    @Query("UPDATE messages SET status = :status WHERE conversationId = :conversationId AND isSentByMe = 0 AND status != :status")
+    suspend fun markMessagesAsRead(conversationId: String, status: MessageStatus = MessageStatus.READ)
+
     @Delete
     suspend fun deleteMessage(message: MessageEntity)
 
-    @Query("SELECT * FROM conversations ORDER BY timestamp DESC")
+    @Query("SELECT * FROM conversations WHERE isArchived = 0 ORDER BY timestamp DESC")
     fun getAllConversations(): Flow<List<ConversationEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertConversation(conversation: ConversationEntity)
+
+    @Query("UPDATE conversations SET lastMessage = :lastMessage, timestamp = :timestamp WHERE id = :id")
+    suspend fun updateConversationLastMessage(id: String, lastMessage: String, timestamp: Long)
+
+    @Query("UPDATE conversations SET disappearAfterMs = :disappearAfterMs WHERE id = :id")
+    suspend fun updateConversationTimer(id: String, disappearAfterMs: Long?)
 
     @Query("SELECT * FROM contacts")
     fun getAllContacts(): Flow<List<ContactEntity>>
@@ -41,4 +50,13 @@ interface MessageDao {
 
     @Query("UPDATE contacts SET isVerified = 1 WHERE userId = :userId")
     suspend fun markContactVerified(userId: String)
+
+    @Query("DELETE FROM conversations WHERE id = :id")
+    suspend fun deleteConversation(id: String)
+
+    @Query("UPDATE conversations SET isArchived = 1 WHERE id = :id")
+    suspend fun archiveConversation(id: String)
+
+    @Query("UPDATE conversations SET isMuted = CASE WHEN isMuted = 1 THEN 0 ELSE 1 END WHERE id = :id")
+    suspend fun toggleMuteConversation(id: String)
 }

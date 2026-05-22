@@ -77,6 +77,13 @@ class MainActivity : FragmentActivity(), PaymentResultListener {
                 .build()
         )
         
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "message_cleanup",
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<com.enclaveapp.worker.MessageCleanupWorker>(15, TimeUnit.MINUTES)
+                .build()
+        )
+        
         Checkout.preload(applicationContext)
         enableEdgeToEdge()
         setContent {

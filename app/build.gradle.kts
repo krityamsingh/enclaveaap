@@ -36,6 +36,22 @@ android {
     }
   }
 
+  flavorDimensions += "env"
+  productFlavors {
+    create("dev") {
+      dimension = "env"
+      applicationIdSuffix = ".dev"
+      versionNameSuffix = "-dev"
+      buildConfigField("String", "FIRESTORE_EMULATOR_HOST", "\"10.0.2.2:8080\"")
+      buildConfigField("Boolean", "USE_EMULATOR", "true")
+    }
+    create("prod") {
+      dimension = "env"
+      buildConfigField("Boolean", "USE_EMULATOR", "false")
+      buildConfigField("String", "FIRESTORE_EMULATOR_HOST", "\"\"")
+    }
+  }
+
   buildTypes {
     release {
       isCrunchPngs = false
@@ -99,7 +115,8 @@ dependencies {
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
-  // implementation(libs.coil.compose)
+  implementation(libs.coil.compose)
+  implementation("io.coil-kt:coil-gif:2.7.0")
   implementation(libs.converter.moshi)
   // implementation(libs.firebase.ai)
   implementation(libs.kotlinx.coroutines.android)

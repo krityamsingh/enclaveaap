@@ -18,4 +18,4 @@ data class MessageEntity(
     val expiresAt: Long? = null
 )
 
-enum class MessageStatus { QUEUED, SENDING, DELIVERED, FAILED }
+enum class MessageStatus { QUEUED, SENDING, DELIVERED, READ, FAILED }

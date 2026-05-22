@@ -1,18 +1,34 @@
-*.iml
-.gradle
-.kotlin
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Secrets
 local.properties
-.env
-debug.keystore
+google-services.json
+*.jks
+*.keystore
+keystore/*.jks
+keystore/*.keystore
+functions/.env
+functions/src/config/secrets.ts
+admin-panel/.env.local
+
+# Build outputs
+/build/
+/app/build/
+/core/*/build/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Android
+/.gradle/
+/captures/
+
+# Node
+node_modules/
+functions/lib/
+admin-panel/build/
+admin-panel/dist/
+
+# Logs
+*.log
+npm-debug.log*

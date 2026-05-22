@@ -1,0 +1,14 @@
+# ENCLAVE SECRETS (TEMPLATE)
+# DO NOT COMMIT THE REAL local.properties FILE
+
+GIPHY_API_KEY=your_giphy_key_here
+LIVEKIT_API_KEY=your_livekit_key_here
+LIVEKIT_API_SECRET=your_livekit_secret_here
+LIVEKIT_URL=https://your.livekit.server
+RAZORPAY_KEY_ID=your_razorpay_key_id
+LIBRETRANSLATE_URL=https://your.translate.server
+
+KEYSTORE_PATH=keystore/release.jks
+KEYSTORE_PASSWORD=your_keystore_password
+KEY_ALIAS=enclave
+KEY_PASSWORD=your_key_password

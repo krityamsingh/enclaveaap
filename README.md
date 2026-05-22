@@ -1,21 +1,60 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Enclave
 
-# Run and deploy your AI Studio app
+Enclave is a production-grade, open-source encrypted messenger for Android. It features full E2E encryption for 1-to-1 chats and secure server-side encryption for groups and channels.
 
-This contains everything you need to run your app locally.
+## Architecture
+```
+enclave/
+├── app/                  # UI, ViewModels, DI
+├── core/
+│   ├── crypto/           # TweetNaCl + Android Keystore
+│   ├── domain/           # UseCases & Repository Interfaces
+│   ├── data/             # Implementations & Data Sources
+│   ├── database/         # Room DB
+│   └── network/          # Firebase & Retrofit
+├── admin-panel/          # React Admin Dashboard
+├── functions/            # Firebase Cloud Functions
+└── infra/                # Rules & Configs
+```
 
-View your app in AI Studio: https://ai.studio/apps/40cea16b-0e62-4010-b7a9-adc9a0aa248b
+## Setup
 
-## Run Locally
+1. **Clone the repository.**
+2. **Add `google-services.json`** to the `app/` directory. You must obtain this from your Firebase Console.
+3. **Configure `local.properties`** at the root of the project with the following required keys:
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+| Key | Where to get |
+|---|---|
+| `GIPHY_API_KEY` | developers.giphy.com |
+| `LIVEKIT_API_KEY` | Your LiveKit server config |
+| `LIVEKIT_API_SECRET` | Your LiveKit server config |
+| `LIVEKIT_URL` | Your VPS URL |
+| `RAZORPAY_KEY_ID` | Razorpay Dashboard |
+| `LIBRETRANSLATE_URL` | Your VPS URL |
+| `KEYSTORE_PATH` | Path to your `.jks` |
+| `KEYSTORE_PASSWORD` | - |
+| `KEY_ALIAS` | - |
+| `KEY_PASSWORD` | - |
 
+*Note: Missing keys will cause the build to fail.*
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+## Self-Hosting
+
+**LiveKit**
+Follow the official guide to host on Ubuntu 22.04.
+
+**LibreTranslate**
+Self-host on the same VPS to ensure translations remain private.
+
+## Build
+
+*   **Debug:** `./gradlew assembleDevDebug`
+*   **Prod AAB:** `./gradlew bundleProdRelease`
+
+## Testing
+
+*   `./gradlew test` (Unit tests)
+*   `./gradlew connectedAndroidTest` (Instrumentation tests)
+
+## License
+GPL-3.0
